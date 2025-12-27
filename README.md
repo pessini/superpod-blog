@@ -1,5 +1,4 @@
 
-
 <div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
@@ -10,6 +9,7 @@
 </div>
 
 <hr />
+
 **Superpod** is a platform for running [Chainlit](https://www.chainlit.io/) as the frontend (with a datalayer powered by Postgres and MinIO) and [Agno OS](https://github.com/your-org/agno-os) as the agent infrastructure. The frontend uses Postgres and MinIO for its data and object storage, while the Agno backend manages its own database and storage independently. Superpod serves as the execution layer for multi-agent coordination and intelligence.
 
 > _This repository is the codebase for the article: [How to Build a Multi-Agent Platform with Chainlit and Agno OS](https://medium.com/your-article-link) (link coming soon)._
@@ -128,9 +128,3 @@ uv run mypy .
 ## License
 
 This project is open-source and available under the [MIT License](LICENSE).
-
----
-
-<p align="center">
-  <em>Made with ❤️ by the Superpod community</em>
-</p>
