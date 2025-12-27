@@ -1,0 +1,28 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#555D50" />
+      <stop offset="100%" stop-color="#6B7462" />
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="32" fill="#F3F4F6" />
+  <circle cx="32" cy="32" r="26" fill="url(#bg-gradient)" />
+  
+  <!-- Bot head/screen -->
+  <rect x="20" y="22" width="24" height="16" rx="2" fill="white" opacity="0.9" />
+  
+  <!-- Eyes -->
+  <ellipse cx="26" cy="28" rx="2" ry="2.5" fill="#555D50" />
+  <ellipse cx="38" cy="28" rx="2" ry="2.5" fill="#555D50" />
+  
+  <!-- Smile -->
+  <path d="M28 33C28 33 30 34 32 34C34 34 36 33 36 33" stroke="#555D50" stroke-width="1.5" stroke-linecap="round" />
+  
+  <!-- Headphones - Left -->
+  <path d="M16 28C16 28 16 30 16 32C16 34 18 34 18 34" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.9" />
+  <rect x="15" y="26" width="3" height="8" rx="1.5" fill="white" opacity="0.9" />
+  
+  <!-- Headphones - Right -->
+  <path d="M48 28C48 28 48 30 48 32C48 34 46 34 46 34" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.9" />
+  <rect x="46" y="26" width="3" height="8" rx="1.5" fill="white" opacity="0.9" />
+</svg>

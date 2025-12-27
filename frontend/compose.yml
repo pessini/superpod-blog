@@ -1,0 +1,96 @@
+name: superpod-frontend
+
+networks:
+  superpod_net:
+    name: superpod_net
+    driver: bridge
+
+volumes:
+  chainlit_postgres_data: {}
+  chainlit_minio_data: {}
+
+services:
+  chainlit-app:
+    build:
+        context: .
+        dockerfile: Dockerfile
+    container_name: chainlit-app
+    restart: always
+    environment:
+      CHAINLIT_AUTH_SECRET: ${CHAINLIT_AUTH_SECRET}
+      # Override for Docker - Chainlit will pick these up
+      DATABASE_URL: postgresql://root:root@chainlit-postgres:5432/postgres
+      DEV_AWS_ENDPOINT: http://chainlit-minio:13203
+      DOCKER_ENV: "true"
+       # S3 config
+      BUCKET_NAME: ${BUCKET_NAME}
+      APP_AWS_ACCESS_KEY: ${APP_AWS_ACCESS_KEY}
+      APP_AWS_SECRET_KEY: ${APP_AWS_SECRET_KEY}
+      APP_AWS_REGION: ${APP_AWS_REGION}
+    depends_on:
+      - chainlit-postgres
+      - chainlit-minio
+    networks:
+      - superpod_net
+    ports:
+      - "13201:8000"
+
+  chainlit-postgres:
+    image: postgres:16
+    container_name: chainlit-postgres
+    restart: always
+    volumes:
+      - chainlit_postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-root}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-root}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+    ports:
+      - ${POSTGRES_PORT:-13202}:5432
+    networks:
+      - superpod_net
+
+  chainlit-db-init:
+    profiles: ["init"]
+    build:
+      context: .
+      dockerfile: db-init.Dockerfile
+    container_name: chainlit-db-init
+    depends_on:
+      - chainlit-postgres
+    environment:
+      DATABASE_URL: postgresql://root:root@chainlit-postgres:5432/postgres
+    networks:
+      - superpod_net
+  chainlit-minio:
+    image: minio/minio:latest
+    container_name: chainlit-minio
+    command: server /data --address ":13203" --console-address ":13204"
+    restart: always
+    ports:
+      - 13203:13203  # MinIO API
+      - 13204:13204  # MinIO Console
+    environment:
+      MINIO_ROOT_USER: ${APP_AWS_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${APP_AWS_SECRET_KEY}
+    networks:
+      - superpod_net
+    volumes:
+      - chainlit_minio_data:/data
+  
+  chainlit-minio-init:
+    profiles: ["init"]
+    build:
+      context: .
+      dockerfile: minio-init.Dockerfile
+    container_name: chainlit-minio-init
+    depends_on:
+      - chainlit-minio
+    environment:
+      MINIO_ENDPOINT: http://chainlit-minio:13203
+      MINIO_ROOT_USER: ${APP_AWS_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${APP_AWS_SECRET_KEY}
+      MINIO_BUCKETS: ${BUCKET_NAME}
+      MINIO_REGION: ${APP_AWS_REGION}
+    networks:
+      - superpod_net
