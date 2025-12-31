@@ -1,0 +1,5 @@
+[tool.uv.workspace]
+members = ["frontend", "backend"]
+
+[tool.uv]
+dev-dependencies = ["agno-infra>=1.0.5"]
