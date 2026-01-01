@@ -60,6 +60,19 @@ No need to setup Langfuse thanks to [Headless Initialization](https://langfuse.c
 
 **Chainlit**: http://localhost:13201
 
+To modify the Chainlit app, start a local dev environment from the repo root and open http://localhost:13200 in your browser:
+
+```bash
+uv run --package chainlit-app --directory frontend chainlit run app.py -w --port 13200
+```
+
+When you're satisfied with the changes, rebuild and redeploy the Docker image:
+
+```bash
+docker compose --file frontend/compose.yaml build chainlit-app --no-cache
+docker compose --file frontend/compose.yaml up chainlit-app -d --force-recreate
+```
+
 ## Pro Tips
 - Run `uv sync` from root to update all projects at once.
 - All projects share a single `.venv` at the root.

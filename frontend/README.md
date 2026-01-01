@@ -1,5 +1,7 @@
 # Superpod
 
+In case you want to use Ollama as a Docker Container.
+
 ## For Mac / Apple Silicon users
 
 If you're using a Mac with an M1 or newer processor, you can't expose your GPU to the Docker instance, unfortunately. 
