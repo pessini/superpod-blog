@@ -4,13 +4,9 @@
   <h3>Collective intelligence for autonomous AI agents.</h3>
 </div>
 
-<hr />
-
 **Superpod** orchestrates a [Chainlit](https://github.com/Chainlit/chainlit) frontend (backed by Postgres and MinIO) with an [Agno OS](https://github.com/agno-agi/agent-infra-docker) backend, providing the execution layer for multi-agent coordination and intelligence.
 
-> _This repository is the codebase for the article: [Building an Engineering AI Stack for Multi-Agent Systems - Designing a Private, Observable Multi-Agent Execution Layer with Chainlit, Agno, and Langfuse](#) (link coming soon)._
-
----
+> 📖 _This repository is the codebase for the article: [Building an Engineering AI Stack for Multi-Agent Systems - Designing a Private, Observable Multi-Agent Execution Layer with Chainlit, Agno, and Langfuse](https://pessini.medium.com/building-an-engineering-ai-stack-for-multi-agent-systems-01ebe35ffb8f)._
 
 ## Tech Stack
 
