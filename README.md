@@ -4,11 +4,14 @@
   <h3>Collective intelligence for autonomous AI agents.</h3>
 </div>
 
+<br /><br />
 **Superpod** orchestrates a [Chainlit](https://github.com/Chainlit/chainlit) frontend (backed by Postgres and MinIO) with an [Agno OS](https://github.com/agno-agi/agent-infra-docker) backend, providing the execution layer for multi-agent coordination and intelligence.
 
 > 📖 _This repository is the codebase for the article: [Building an Engineering AI Stack for Multi-Agent Systems - Designing a Private, Observable Multi-Agent Execution Layer with Chainlit, Agno, and Langfuse](https://pessini.medium.com/building-an-engineering-ai-stack-for-multi-agent-systems-01ebe35ffb8f)._
 
 ## Tech Stack
+
+![Architecture](/assets/blog/architecture.png)
 
 - **Frontend:** [Chainlit](https://www.chainlit.io/)
 - **Backend:** [Agno OS](https://www.agno.com/)
@@ -18,10 +21,6 @@
 - **Dependency Management:** [uv](https://github.com/astral-sh/uv)
 - **Containerization:** Docker
 - **Vector Database:** [Qdrant](https://qdrant.tech/documentation/quickstart/) (shipped together but not integrated)
-
-![Architecture](/assets/blog/architecture.png)
-
----
 
 ## Project Setup & Usage
 
@@ -60,8 +59,6 @@ make init-frontend
 No need to setup Langfuse thanks to [Headless Initialization](https://langfuse.com/self-hosting/administration/headless-initialization).
 
 **Chainlit**: http://localhost:13201
-
----
 
 ## Pro Tips
 - Run `uv sync` from root to update all projects at once.
