@@ -3,7 +3,7 @@ name: superpod-frontend
 networks:
   superpod_net:
     name: superpod_net
-    driver: bridge
+    external: true
 
 volumes:
   chainlit_postgres_data: {}

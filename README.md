@@ -1,6 +1,6 @@
 
 <div align="center">
-  <img alt="Superpod logo" src="assets/logo-celadon.svg" style="max-width: 300px; width: 80%;">
+  <img alt="Superpod logo" src="assets/logo-celadon.svg" width="300">
   <h3>Collective intelligence for autonomous AI agents.</h3>
 </div>
 
@@ -49,7 +49,7 @@ Install all dependencies for both frontend and backend:
 make venv
 source .venv/bin/activate  # Activate the virtual environment
 make env
-make init-backend
+make init-backend # run this first which creates the docker network
 make init-frontend
 ```
 
