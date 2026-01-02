@@ -57,6 +57,16 @@ frontend-down:
 	docker compose --file frontend/compose.yaml down --remove-orphans
 	@echo "\n✅ Frontend services down!"
 
+# Start Chainlit dev mode
+chainlit-dev:
+	uv run --package chainlit-app --directory frontend chainlit run app.py -w --port 13200
+
+# Deploy Chainlit
+chainlit-deploy:
+	docker compose --file frontend/compose.yaml build chainlit-app
+	docker compose --file frontend/compose.yaml up chainlit-app -d --force-recreate
+	@echo "\n✅ Chainlit docker image built and deployed at http://localhost:13201/"
+
 # Start all services
 up:
 	docker compose --file backend/compose.yaml up
