@@ -75,8 +75,8 @@ down:
 
 # Clean everything (volumes included)
 clean:
-	docker compose --file backend/compose.yaml --profile init down
-	docker compose --file backend/compose.yaml down --volumes --remove-orphans
 	docker compose --file frontend/compose.yaml --profile init down
 	docker compose --file frontend/compose.yaml --profile init down --volumes --remove-orphans
+	docker compose --file backend/compose.yaml --profile init down
+	docker compose --file backend/compose.yaml down --volumes --remove-orphans
 	@echo "\n🧹 All containers and volumes removed"
