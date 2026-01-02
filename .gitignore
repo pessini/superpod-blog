@@ -86,4 +86,4 @@ secrets.toml
 credentials.toml
 .env
 
-backend/
+uv.lock

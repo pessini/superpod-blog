@@ -1,0 +1,243 @@
+name: superpod-backend
+services:
+############################### AGNO ################################
+  agno-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${IMAGE_NAME:-agent-os}:${IMAGE_TAG:-latest}
+    container_name: agno-api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+    restart: unless-stopped
+    ports:
+      - 13300:8080
+    volumes:
+      - .:/app
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-superpod}
+      DB_PASS: ${DB_PASS:-superpod_changeme}
+      DB_DATABASE: ${DB_DATABASE:-agno}
+      WAIT_FOR_DB: "True"
+      PRINT_ENV_ON_LOAD: "True"
+    networks:
+      - superpod_net
+    depends_on:
+      agno-pgvector:
+        condition: service_healthy
+      langfuse-web:
+        condition: service_started
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    
+  agno-pgvector:
+    image: agnohq/pgvector:17
+    container_name: agno-pgvector
+    restart: unless-stopped
+    ports:
+      - 13301:5432
+    volumes:
+      - agno_pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER:-superpod}
+      POSTGRES_PASSWORD: ${DB_PASS:-superpod_changeme}
+      POSTGRES_DB: ${DB_DATABASE:-agno}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-superpod}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - superpod_net
+
+
+############################### LANGFUSE ################################
+
+  langfuse-worker:
+    container_name: langfuse-worker
+    image: langfuse/langfuse-worker:3
+    restart: always
+    depends_on:
+      - langfuse-postgres
+      - langfuse-redis
+      - langfuse-clickhouse
+      - langfuse-minio
+    ports:
+      - 13302:3030
+    environment: &langfuse-worker-env
+      DATABASE_URL: postgresql://${LANGFUSE_POSTGRES_USER}:${LANGFUSE_POSTGRES_PASSWORD}@${LANGFUSE_POSTGRES_HOST}:${LANGFUSE_POSTGRES_PORT}/${LANGFUSE_POSTGRES_DB}
+      SALT: ${LANGFUSE_SALT}
+      ENCRYPTION_KEY: ${LANGFUSE_ENCRYPTION_KEY}
+      TELEMETRY_ENABLED: false
+      LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES: true
+
+      CLICKHOUSE_MIGRATION_URL: ${LANGFUSE_CLICKHOUSE_MIGRATION_URL}
+      CLICKHOUSE_URL: ${LANGFUSE_CLICKHOUSE_URL}
+      CLICKHOUSE_USER: ${LANGFUSE_CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${LANGFUSE_CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_CLUSTER_ENABLED: ${LANGFUSE_CLICKHOUSE_CLUSTER_ENABLED}
+
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: true # required for MinIO
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: ${LANGFUSE_S3_EVENT_UPLOAD_BUCKET}
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: ${LANGFUSE_S3_EVENT_UPLOAD_REGION}
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: ${LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID}
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: ${LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY}
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: ${LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT}
+
+      LANGFUSE_INIT_ORG_ID: ${LANGFUSE_INIT_ORG_ID}
+      LANGFUSE_INIT_ORG_NAME: ${LANGFUSE_INIT_ORG_NAME}
+      LANGFUSE_INIT_PROJECT_ID: ${LANGFUSE_INIT_PROJECT_ID}
+      LANGFUSE_INIT_PROJECT_NAME: ${LANGFUSE_INIT_PROJECT_NAME}
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: ${LANGFUSE_INIT_PROJECT_PUBLIC_KEY}
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: ${LANGFUSE_INIT_PROJECT_SECRET_KEY}
+      LANGFUSE_INIT_USER_EMAIL: ${LANGFUSE_INIT_USER_EMAIL}
+      LANGFUSE_INIT_USER_NAME: ${LANGFUSE_INIT_USER_NAME}
+      LANGFUSE_INIT_USER_PASSWORD: ${LANGFUSE_INIT_USER_PASSWORD}
+
+      REDIS_HOST: ${LANGFUSE_REDIS_HOST}
+      REDIS_PORT: ${LANGFUSE_REDIS_PORT}
+      REDIS_AUTH: ${LANGFUSE_REDIS_AUTH}
+      REDIS_TLS_ENABLED: false
+      REDIS_TLS_CA: /certs/ca.crt
+      REDIS_TLS_CERT: /certs/redis.crt
+      REDIS_TLS_KEY: /certs/redis.key
+    networks:
+      - superpod_net
+
+  langfuse-web:
+    container_name: langfuse-web
+    image: langfuse/langfuse:3
+    restart: always
+    ports:
+      - 13303:3000
+    environment:
+      <<: *langfuse-worker-env
+      NEXTAUTH_URL: ${LANGFUSE_NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET}
+    depends_on:
+      langfuse-postgres:
+        condition: service_healthy
+      langfuse-clickhouse:
+        condition: service_started
+      langfuse-redis:
+        condition: service_started
+      langfuse-minio:
+        condition: service_started
+    networks:
+      - superpod_net
+
+  langfuse-clickhouse:
+    container_name: langfuse-clickhouse
+    image: clickhouse/clickhouse-server:25.11
+    restart: always
+    user: "101:101"
+    environment:
+      CLICKHOUSE_DB: ${LANGFUSE_CLICKHOUSE_DB}
+      CLICKHOUSE_USER: ${LANGFUSE_CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${LANGFUSE_CLICKHOUSE_PASSWORD}
+    volumes:
+      - langfuse_clickhouse_data:/var/lib/clickhouse
+      - langfuse_clickhouse_logs:/var/log/clickhouse-server
+    ports:
+      - 13304:8123
+      - 13305:9000
+    networks:
+      - superpod_net
+
+  langfuse-redis:
+    container_name: langfuse-redis
+    image: redis:8
+    restart: always
+    command: >
+      --requirepass ${LANGFUSE_REDIS_AUTH}
+    ports:
+      - 13306:6379
+    networks:
+      - superpod_net
+
+  langfuse-postgres:
+    container_name: langfuse-postgres
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: ${LANGFUSE_POSTGRES_USER:-langfuse}
+      POSTGRES_PASSWORD: ${LANGFUSE_POSTGRES_PASSWORD:-langfuse_changeme}
+      POSTGRES_DB: ${LANGFUSE_POSTGRES_DB:-langfuse}
+    ports:
+      - 13307:5432
+    volumes:
+      - langfuse_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LANGFUSE_POSTGRES_USER:-langfuse}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - superpod_net
+
+  langfuse-minio:
+    image: minio/minio:latest
+    container_name: langfuse-minio
+    command: server /data --address ":13308" --console-address ":13309"
+    restart: always
+    ports:
+      - 13308:13308  # MinIO API
+      - 13309:13309  # MinIO Console
+    environment:
+      MINIO_ROOT_USER: ${LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY}
+    networks:
+      - superpod_net
+    volumes:
+      - langfuse_minio_data:/data
+
+  langfuse-minio-init:
+    profiles: ["init"]
+    build:
+      context: .
+      dockerfile: minio-init.Dockerfile
+    container_name: langfuse-minio-init
+    depends_on:
+      - langfuse-minio
+    environment:
+      MINIO_ENDPOINT: ${LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT}
+      MINIO_ROOT_USER: ${LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY}
+      MINIO_BUCKETS: ${LANGFUSE_S3_EVENT_UPLOAD_BUCKET}
+      MINIO_REGION: ${LANGFUSE_S3_EVENT_UPLOAD_REGION}
+    networks:
+      - superpod_net
+
+############################### QDRANT ################################
+
+  qdrant:
+    image: qdrant/qdrant:v1
+    restart: always
+    container_name: qdrant
+    ports:
+      - 13310:6333
+      - 13311:6334
+    expose:
+      - 13310
+      - 13311
+      - 13312
+    networks:
+      - superpod_net
+    volumes:
+      - qdrant_volume:/qdrant/storage
+      - qdrant_snapshots:/snapshots
+
+volumes:
+  agno_pgdata: {}
+  langfuse_clickhouse_data: {}
+  langfuse_clickhouse_logs: {}
+  langfuse_postgres_data: {}
+  langfuse_minio_data: {}
+  qdrant_volume: {}
+  qdrant_snapshots: {}
+
+networks:
+  superpod_net:
+    name: superpod_net
+    driver: bridge

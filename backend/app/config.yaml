@@ -1,0 +1,22 @@
+chat:
+  quick_prompts:
+    agno-simple:
+      - "What  is Data Science?"
+      - "Who is the president of Brazil?"
+      - "Describe Machine Learning."
+    web-search-agent:
+      - "What can you do?"
+      - "What is currently happening in France?"
+      - "What is the latest news on the stock market?"
+    agno-assist:
+      - "What can you do?"
+      - "What is the latest news on Agno?"
+      - "Tell me about Agno's AgentOS"
+    multilingual-team:
+      - "What can you do?"
+      - "How to say hello in French?"
+      - "How to ask for ask for directions in Spanish and German?"
+    reasoning-research-team:
+      - "What can you do?"
+      - "Tell me about the trending topics in AI and Machine Learning?"
+      - "Tell me about the latest developments in Quantum Computing?"
